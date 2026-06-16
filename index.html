@@ -5,10 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Gram Network Mining Bot</title>
     
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    
+    <!-- Telegram Web App -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
@@ -18,14 +25,16 @@
             --green-bg: #d1fae5; --blue: #3b82f6; --orange: #f59e0b;
             --br-lg: 20px; --br-md: 14px; --br-sm: 10px; --divider: #e5e7eb;
         }
+        
         * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter',sans-serif; -webkit-tap-highlight-color:transparent; }
         body { background:var(--bg); color:var(--text); padding:18px; max-width:480px; margin:0 auto; -webkit-user-select:none; user-select:none; overflow-x:hidden; }
         
-        /* Loading */
+        /* Loading Screen */
         .loading-screen {
             position:fixed; top:0; left:0; width:100%; height:100%;
             background:linear-gradient(135deg,#991b1b,#ef4444); display:flex;
-            flex-direction:column; align-items:center; justify-content:center; z-index:9999; color:white;
+            flex-direction:column; align-items:center; justify-content:center;
+            z-index:9999; color:white;
         }
         .loader-spin {
             width:60px; height:60px; border:4px solid rgba(255,255,255,0.3);
@@ -33,39 +42,38 @@
         }
         @keyframes spin { to { transform:rotate(360deg); } }
         
-        /* Popup/Modal */
+        /* Modal Popup */
         .modal-overlay {
             display:none; position:fixed; top:0; left:0; width:100%; height:100%;
             background:rgba(0,0,0,0.7); z-index:10000; align-items:center; justify-content:center;
             animation:fadeIn 0.3s ease;
         }
         .modal-overlay.show { display:flex; }
-        @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+        @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
         
         .modal-popup {
             background:white; border-radius:24px; padding:30px 25px; width:90%; max-width:360px;
-            text-align:center; box-shadow:0 25px 60px rgba(0,0,0,0.3); animation:popIn 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
+            text-align:center; box-shadow:0 25px 60px rgba(0,0,0,0.3);
+            animation:popIn 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
             position:relative; overflow:hidden;
         }
-        @keyframes popIn { from { transform:scale(0.8); opacity:0; } to { transform:scale(1); opacity:1; } }
+        @keyframes popIn { from{transform:scale(0.8);opacity:0;} to{transform:scale(1);opacity:1;} }
         
         .modal-popup::before {
             content:''; position:absolute; top:0; left:0; right:0; height:4px;
             background:linear-gradient(90deg,var(--primary),var(--orange),var(--green),var(--blue));
         }
         
-        .modal-icon {
-            font-size:55px; margin-bottom:15px; display:block;
-        }
+        .modal-icon { font-size:55px; margin-bottom:15px; display:block; }
         .modal-popup h2 { font-size:22px; color:var(--text); margin-bottom:8px; font-weight:800; }
         .modal-popup p { font-size:13px; color:var(--muted); margin-bottom:20px; line-height:1.5; }
         
-        .modal-popup .highlight-box {
+        .highlight-box {
             background:linear-gradient(135deg,#fef3c7,#fde68a); border:2px dashed #f59e0b;
             border-radius:16px; padding:15px; margin-bottom:20px;
         }
-        .modal-popup .highlight-box h3 { font-size:28px; color:#92400e; margin:0; font-weight:800; }
-        .modal-popup .highlight-box span { font-size:11px; color:#a16207; font-weight:600; }
+        .highlight-box h3 { font-size:28px; color:#92400e; margin:0; font-weight:800; }
+        .highlight-box span { font-size:11px; color:#a16207; font-weight:600; }
         
         .btn {
             padding:14px 24px; border:none; border-radius:14px; font-size:15px; font-weight:700;
@@ -78,11 +86,12 @@
         .btn-blue { background:linear-gradient(135deg,#3b82f6,#2563eb); color:white; box-shadow:0 6px 20px rgba(59,130,246,0.3); }
         .btn-outline { background:#f3f4f6; color:var(--text); }
         .btn-sm { padding:10px 16px; font-size:13px; border-radius:10px; width:auto; }
+        .btn:disabled { background:#9ca3af; box-shadow:none; cursor:not-allowed; opacity:0.7; }
         
         .btn-row { display:flex; gap:10px; margin-top:10px; }
         .btn-row .btn { flex:1; }
         
-        /* Channel Verify */
+        /* Channel List */
         .channel-list { text-align:left; margin-bottom:20px; }
         .channel-item {
             display:flex; align-items:center; gap:12px; padding:14px; margin-bottom:10px;
@@ -93,7 +102,7 @@
         .channel-item.joined { background:#f0fdf4; border-color:var(--green); }
         .channel-item .ch-icon {
             width:42px; height:42px; border-radius:50%; background:#0088cc;
-            display:flex; align-items:center; justify-content:center; color:white; font-size:20px;
+            display:flex; align-items:center; justify-content:center; color:white; font-size:20px; flex-shrink:0;
         }
         .channel-item .ch-info { flex:1; }
         .channel-item .ch-info strong { font-size:14px; display:block; }
@@ -118,9 +127,10 @@
             border-radius:14px; font-size:15px; font-weight:600; background:#f9fafa;
         }
         .reg-input:focus { border-color:var(--primary); outline:none; }
+        .reg-input[readonly] { background:#f3f4f6; color:#4b5563; }
         
         /* Dashboard */
-        .app-page { display:none; animation:fadeIn 0.3s ease; padding-bottom:90px; }
+        .app-page { display:none; animation:fadeIn 0.3s ease; padding-bottom:90px; padding-top:80px; }
         .app-page.active { display:block; }
         
         .top-bar {
@@ -138,9 +148,11 @@
             border-radius:99px; font-size:12px; font-weight:600; margin-top:10px;
         }
         .status-badge.active { background:var(--green-bg); color:#065f46; }
+        .status-badge.ready { background:#fef3c7; color:#92400e; }
         .status-badge.inactive { background:#fee2e2; color:#991b1b; }
         .status-dot { width:7px; height:7px; border-radius:50%; }
         .status-dot.green { background:var(--green); }
+        .status-dot.orange { background:var(--orange); }
         .status-dot.red { background:var(--primary); }
         
         .mining-card {
@@ -150,8 +162,8 @@
         .mining-card .m-row { display:flex; justify-content:space-between; margin-bottom:15px; }
         .mining-card .m-col h4 { font-size:11px; opacity:0.85; font-weight:400; }
         .mining-card .m-col h2 { font-size:18px; font-weight:700; }
-        .progress-bar { height:6px; background:rgba(255,255,255,0.2); border-radius:99px; margin:15px 0; }
-        .progress-fill { height:100%; background:#4ade80; border-radius:99px; transition:width 0.5s; }
+        .progress-bar { height:6px; background:rgba(255,255,255,0.2); border-radius:99px; margin:12px 0; }
+        .progress-fill { height:100%; background:#4ade80; border-radius:99px; transition:width 0.5s; width:0%; }
         
         .two-col { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:18px; }
         .g-card {
@@ -190,17 +202,29 @@
         .task-img {
             width:48px; height:48px; border-radius:12px; object-fit:cover;
             background:linear-gradient(135deg,#fef3c7,#fde68a); display:flex;
-            align-items:center; justify-content:center; font-size:22px; flex-shrink:0;
+            align-items:center; justify-content:center; font-size:22px; flex-shrink:0; overflow:hidden;
         }
+        .task-img img { width:100%; height:100%; object-fit:cover; }
         .task-info { flex:1; }
         .task-info h4 { font-size:14px; margin-bottom:4px; }
         .task-info p { font-size:12px; color:var(--green); font-weight:600; }
         .btn-task {
             padding:8px 18px; border:none; border-radius:20px; font-size:12px;
             font-weight:700; cursor:pointer; background:linear-gradient(135deg,#f59e0b,#d97706);
-            color:white; white-space:nowrap;
+            color:white; white-space:nowrap; transition:all 0.2s;
         }
+        .btn-task:active { transform:scale(0.95); }
         .btn-task.done { background:#e5e7eb; color:#9ca3af; cursor:not-allowed; }
+        
+        /* Task Tabs */
+        .tab-bar { display:flex; gap:5px; margin-bottom:15px; overflow-x:auto; padding-bottom:5px; }
+        .tab-bar::-webkit-scrollbar { display:none; }
+        .tab-item {
+            padding:8px 16px; background:white; border-radius:20px; font-size:12px;
+            font-weight:600; color:var(--muted); cursor:pointer; white-space:nowrap;
+            box-shadow:0 1px 3px rgba(0,0,0,0.05); transition:all 0.2s;
+        }
+        .tab-item.active { background:var(--primary); color:white; }
         
         /* Bottom Nav */
         .bottom-nav {
@@ -208,17 +232,17 @@
             box-shadow:0 -4px 20px rgba(0,0,0,0.06); display:flex; justify-content:space-around;
             padding:10px 5px 16px; z-index:999; border-radius:20px 20px 0 0;
         }
-        .nav-tab { display:flex; flex-direction:column; align-items:center; gap:4px; color:var(--muted); cursor:pointer; font-size:10px; font-weight:600; }
+        .nav-tab { display:flex; flex-direction:column; align-items:center; gap:4px; color:var(--muted); cursor:pointer; font-size:10px; font-weight:600; position:relative; }
         .nav-tab i { font-size:22px; }
         .nav-tab.active { color:var(--primary); }
         
         .nav-badge {
-            position:absolute; top:-5px; right:-8px; background:var(--primary);
+            position:absolute; top:-8px; right:-10px; background:var(--primary);
             color:white; font-size:9px; font-weight:800; min-width:16px; height:16px;
             border-radius:50%; display:flex; align-items:center; justify-content:center;
         }
         
-        /* Payment Methods */
+        /* Payment */
         .payment-card {
             background:white; border-radius:var(--br-md); padding:15px; margin-bottom:10px;
             display:flex; align-items:center; gap:12px; box-shadow:0 2px 8px rgba(0,0,0,0.04);
@@ -227,22 +251,20 @@
         
         /* Claim Timer */
         .claim-timer {
-            display:inline-flex; align-items:center; gap:6px; padding:8px 14px;
-            background:#fef3c7; border-radius:20px; font-size:12px; font-weight:600; color:#92400e;
+            display:inline-flex; align-items:center; gap:6px; padding:6px 12px;
+            background:#fef3c7; border-radius:20px; font-size:11px; font-weight:600; color:#92400e;
         }
         
-        .tab-bar { display:flex; gap:5px; margin-bottom:15px; overflow-x:auto; }
-        .tab-bar::-webkit-scrollbar { display:none; }
-        .tab-item {
-            padding:8px 16px; background:white; border-radius:20px; font-size:12px;
-            font-weight:600; color:var(--muted); cursor:pointer; white-space:nowrap;
-            box-shadow:0 1px 3px rgba(0,0,0,0.05);
+        /* Task Timer */
+        .task-timer {
+            display:inline-block; font-size:10px; color:var(--orange); font-weight:600;
+            margin-left:4px;
         }
-        .tab-item.active { background:var(--primary); color:white; }
     </style>
 </head>
 <body>
 
+<!-- Loading Screen -->
 <div id="loadingScreen" class="loading-screen">
     <div class="loader-spin"></div>
     <p style="font-weight:600;">Loading Gram Network...</p>
@@ -253,7 +275,7 @@
     <div class="modal-popup">
         <span class="modal-icon">📢</span>
         <h2>Join Required Channels</h2>
-        <p>Please join all channels to continue using Gram Network</p>
+        <p>Please join all channels to continue</p>
         <div class="channel-list" id="channelList"></div>
         <button class="btn btn-primary" id="btnVerifyChannels" disabled>
             <i class="fa-solid fa-check"></i> Verify & Continue
@@ -282,14 +304,20 @@
 <div id="dashPage" style="display:none;">
     <!-- Home -->
     <div id="pageHome" class="app-page active">
+        <div style="text-align:center; margin-bottom:20px;">
+            <div style="background:#000; color:#fff; padding:8px 24px; border-radius:30px; font-size:14px; font-weight:600; display:inline-flex; align-items:center; gap:8px;">
+                <span style="width:8px;height:8px;background:var(--primary);border-radius:50%;"></span> Gram Network
+            </div>
+        </div>
+        
         <div class="top-bar">
             <div class="greeting">👋 Welcome back,</div>
             <div class="username" id="dashUsername">...</div>
             <div class="balance"><span id="dashBalance">0.00</span> <span>GRM</span></div>
             <div class="usd">≈ $<span id="dashUsd">0.00</span> USD</div>
             <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span class="status-badge" id="statusBadge">
-                    <span class="status-dot" id="statusDot"></span>
+                <span class="status-badge inactive" id="statusBadge">
+                    <span class="status-dot red" id="statusDot"></span>
                     <span id="statusText">Loading...</span>
                 </span>
             </div>
@@ -304,7 +332,7 @@
                 <span id="progLabel">Ready to start</span>
                 <span id="timeLeft">00:00:00</span>
             </div>
-            <div class="progress-bar"><div class="progress-fill" id="progFill" style="width:0%;"></div></div>
+            <div class="progress-bar"><div class="progress-fill" id="progFill"></div></div>
             <div style="display:flex; justify-content:space-between; font-size:12px;">
                 <span>💰 Earned: <strong id="tokensEarned">0.00</strong> GRM</span>
                 <span>🔋 Energy: <strong id="energyLeft">100</strong>/100</span>
@@ -340,6 +368,12 @@
     
     <!-- Wallet -->
     <div id="pageWallet" class="app-page">
+        <div style="text-align:center; margin-bottom:20px;">
+            <div style="background:#000; color:#fff; padding:8px 24px; border-radius:30px; font-size:14px; font-weight:600; display:inline-flex; align-items:center; gap:8px;">
+                <span style="width:8px;height:8px;background:#3b82f6;border-radius:50%;"></span> My Wallet
+            </div>
+        </div>
+        
         <div class="top-bar" style="text-align:center;">
             <div style="font-size:14px; color:var(--muted);">Total Balance</div>
             <div style="font-size:32px; font-weight:800;" id="walletBalance">0.00 GRM</div>
@@ -376,6 +410,11 @@
     
     <!-- Tasks -->
     <div id="pageTasks" class="app-page">
+        <div style="text-align:center; margin-bottom:20px;">
+            <div style="background:#000; color:#fff; padding:8px 24px; border-radius:30px; font-size:14px; font-weight:600; display:inline-flex; align-items:center; gap:8px;">
+                <span style="width:8px;height:8px;background:#f59e0b;border-radius:50%;"></span> Task Center
+            </div>
+        </div>
         <div class="tab-bar" id="taskTabs">
             <div class="tab-item active" onclick="filterTasks('all')">All</div>
             <div class="tab-item" onclick="filterTasks('hot')">Hot</div>
@@ -387,6 +426,12 @@
     
     <!-- Profile -->
     <div id="pageProfile" class="app-page">
+        <div style="text-align:center; margin-bottom:20px;">
+            <div style="background:#000; color:#fff; padding:8px 24px; border-radius:30px; font-size:14px; font-weight:600; display:inline-flex; align-items:center; gap:8px;">
+                <span style="width:8px;height:8px;background:#ef4444;border-radius:50%;"></span> Profile
+            </div>
+        </div>
+        
         <div class="top-bar" style="text-align:center;">
             <div style="font-size:60px;">👤</div>
             <h3 id="profileName" style="font-size:20px; margin-top:10px;"></h3>
@@ -436,7 +481,7 @@
 
 <script>
 // ==================== FIREBASE CONFIG ====================
-// ⚠️ আপনার Firebase কনফিগ এখানে দিন
+// ⚠️ আপনার Firebase কনফিগারেশন এখানে বসান
 const firebaseConfig = {
     apiKey: "AIzaSyCi7VY8ge8_8VR0NhCkQXWGCTuTEiIrC6I",
   authDomain: "easy-earning-app-990d9.firebaseapp.com",
@@ -461,6 +506,7 @@ let joinedChannels = {};
 let miningTimer = null;
 let dailyTimer = null;
 let taskFilter = 'all';
+let taskTimers = {};
 
 // ==================== INIT ====================
 document.addEventListener('DOMContentLoaded', async () => {
@@ -498,14 +544,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     
     if (!currentUser) {
-        // Check if channels required
         if (allChannels.filter(c => c.is_active).length > 0) {
             showChannelVerification(() => showRegistration());
         } else {
             showRegistration();
         }
     } else {
-        // Check if channels required
+        currentUser.id = telegramUser.id;
         if (allChannels.filter(c => c.is_active).length > 0) {
             showChannelVerification(() => initDashboard());
         } else {
@@ -513,10 +558,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
     
-    // Listen for real-time updates
+    // Real-time listeners
     db.ref('users/' + telegramUser.id).on('value', snap => {
         currentUser = snap.val();
-        if (currentUser) updateAllUI();
+        if (currentUser) { currentUser.id = telegramUser.id; updateAllUI(); }
     });
     
     db.ref('tasks').on('value', snap => {
@@ -543,14 +588,11 @@ async function loadChannels() {
 function showChannelVerification(callback) {
     document.getElementById('loadingScreen').style.display = 'none';
     
-    if (allChannels.length === 0) {
-        callback();
-        return;
-    }
+    if (allChannels.length === 0) { callback(); return; }
     
     const list = document.getElementById('channelList');
     list.innerHTML = allChannels.map((c, i) => `
-        <div class="channel-item" id="chItem${i}" onclick="openChannel('${c.url}','${c.username}',${i})">
+        <div class="channel-item" id="chItem${i}" onclick="openChannel('${c.url.replace(/'/g, "\\'")}','${c.username.replace(/'/g, "\\'")}',${i})">
             <div class="ch-icon"><i class="fa-brands fa-telegram"></i></div>
             <div class="ch-info">
                 <strong>${c.name}</strong>
@@ -570,19 +612,26 @@ function showChannelVerification(callback) {
 
 function openChannel(url, username, index) {
     try {
-        tg.openTelegramLink(url);
+        if (url.startsWith('https://t.me/')) {
+            tg.openTelegramLink(url);
+        } else {
+            tg.openLink(url);
+        }
     } catch(e) {
-        tg.openLink(url);
+        window.open(url, '_blank');
     }
     
-    // Mark as joined (visual only, actual verification happens on server)
     document.getElementById('chItem'+index).classList.add('joined');
     document.getElementById('chStatus'+index).textContent = '✅';
     joinedChannels[username] = true;
     
-    // Check if all joined
     const allJoined = allChannels.every((c, i) => joinedChannels[c.username]);
     document.getElementById('btnVerifyChannels').disabled = !allJoined;
+    if (!allJoined) {
+        document.getElementById('btnVerifyChannels').textContent = 'Join All Channels First';
+    } else {
+        document.getElementById('btnVerifyChannels').innerHTML = '<i class="fa-solid fa-check"></i> Verify & Continue';
+    }
 }
 
 // ==================== REGISTRATION ====================
@@ -598,7 +647,8 @@ function showRegistration() {
 }
 
 async function registerUser() {
-    showLoading();
+    showLoading('Creating account...');
+    
     const newUser = {
         telegram_id: telegramUser.id,
         username: telegramUser.username,
@@ -622,6 +672,7 @@ async function registerUser() {
     
     await db.ref('users/' + telegramUser.id).set(newUser);
     currentUser = newUser;
+    currentUser.id = telegramUser.id;
     
     // Handle referral
     if (telegramUser.referredBy && telegramUser.referredBy !== telegramUser.id) {
@@ -710,6 +761,7 @@ function updateMiningUI() {
         text.textContent = 'Mining Active';
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mining...';
         btn.disabled = true;
+        btn.onclick = null;
         label.textContent = '⛏️ Mining in progress...';
         
         miningTimer = setInterval(() => {
@@ -732,8 +784,8 @@ function updateMiningUI() {
             fill.style.width = ((total-left)/total*100)+'%';
         }, 1000);
     } else if (status === 'ready to claim') {
-        badge.className = 'status-badge inactive';
-        dot.className = 'status-dot red';
+        badge.className = 'status-badge ready';
+        dot.className = 'status-dot orange';
         text.textContent = 'Ready to Claim';
         btn.innerHTML = '<i class="fa-solid fa-gift"></i> Claim Reward';
         btn.disabled = false;
@@ -783,13 +835,17 @@ function updateDailyClaimUI() {
                 const h = Math.floor(l/3600000);
                 const m = Math.floor((l%3600000)/60000);
                 const s = Math.floor((l%60000)/1000);
-                timerEl.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+                timerEl.textContent = `⏰ ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
             }, 1000);
         } else {
             timerEl.style.display = 'none';
             btn.style.opacity = '1';
             btn.onclick = claimDaily;
         }
+    } else {
+        timerEl.style.display = 'none';
+        btn.style.opacity = '1';
+        btn.onclick = claimDaily;
     }
 }
 
@@ -800,20 +856,25 @@ async function startMining() {
         return;
     }
     
-    const hours = settings.session_hours || 8;
-    const seconds = hours * 3600;
-    const now = new Date();
-    const end = new Date(now.getTime() + seconds*1000);
-    
-    await db.ref('users/'+telegramUser.id).update({
-        mining_status: 'active',
-        mining_start_time: now.toISOString(),
-        mining_end_time: end.toISOString(),
-        session_time_seconds: seconds,
-        energy: Math.max(0, (currentUser.energy||100) - (settings.energy_cost||10))
+    showConfirm('Start Mining', 'Start a new mining session?', async () => {
+        showLoading('Starting mining...');
+        
+        const hours = settings.session_hours || 8;
+        const seconds = hours * 3600;
+        const now = new Date();
+        const end = new Date(now.getTime() + seconds*1000);
+        
+        await db.ref('users/'+telegramUser.id).update({
+            mining_status: 'active',
+            mining_start_time: now.toISOString(),
+            mining_end_time: end.toISOString(),
+            session_time_seconds: seconds,
+            energy: Math.max(0, (currentUser.energy||100) - (settings.energy_cost||10))
+        });
+        
+        hideLoading();
+        showPopup('success', '⛏️', 'Mining Started!', `Your ${hours}-hour session is active.`);
     });
-    
-    showPopup('success', '⛏️', 'Mining Started!', `Your ${hours}-hour session is now active.`);
 }
 
 async function claimMining() {
@@ -823,6 +884,8 @@ async function claimMining() {
     const hours = (currentUser.session_time_seconds||28800)/3600;
     const bonus = (currentUser.mining_power||0) * (settings.power_bonus||0.1);
     const reward = rate * hours + bonus;
+    
+    showLoading('Claiming reward...');
     
     await db.ref('users/'+telegramUser.id).update({
         mining_status: 'inactive',
@@ -838,6 +901,7 @@ async function claimMining() {
         timestamp: new Date().toISOString()
     });
     
+    hideLoading();
     showPopup('success', '💰', 'Reward Claimed!', `You earned ${reward.toFixed(2)} GRM!`);
 }
 
@@ -859,19 +923,24 @@ async function claimDaily() {
         return;
     }
     
-    const reward = currentUser.daily_reward || 10;
-    await db.ref('users/'+telegramUser.id).update({
-        total_balance: (currentUser.total_balance||0) + reward,
-        last_daily_claim: new Date().toISOString()
+    showConfirm('Claim Daily Reward', 'Collect your daily bonus?', async () => {
+        showLoading('Claiming...');
+        
+        const reward = currentUser.daily_reward || 10;
+        await db.ref('users/'+telegramUser.id).update({
+            total_balance: (currentUser.total_balance||0) + reward,
+            last_daily_claim: new Date().toISOString()
+        });
+        
+        await db.ref('transactions/'+telegramUser.id).push({
+            type: 'daily',
+            amount: reward,
+            timestamp: new Date().toISOString()
+        });
+        
+        hideLoading();
+        showPopup('success', '🎁', 'Daily Reward!', `+${reward} GRM claimed!`);
     });
-    
-    await db.ref('transactions/'+telegramUser.id).push({
-        type: 'daily',
-        amount: reward,
-        timestamp: new Date().toISOString()
-    });
-    
-    showPopup('success', '🎁', 'Daily Reward!', `+${reward} GRM claimed!`);
 }
 
 // ==================== TASKS ====================
@@ -900,19 +969,23 @@ async function renderTasks() {
     
     container.innerHTML = filtered.map(t => {
         const isDone = completed[t.id];
+        const timerRunning = taskTimers[t.id] && taskTimers[t.id] > 0;
+        const btnDisabled = isDone || timerRunning;
+        
         return `
             <div class="task-card">
                 <div class="task-img">
-                    ${t.image_url ? `<img src="${t.image_url}" style="width:100%;height:100%;border-radius:12px;object-fit:cover;">` : '📋'}
+                    ${t.image_url ? `<img src="${t.image_url}" alt="${t.title}">` : '📋'}
                 </div>
                 <div class="task-info">
                     <h4>${t.title}</h4>
                     <p>+${t.reward} GRM</p>
                 </div>
                 <button class="btn-task ${isDone?'done':''}" 
-                    ${isDone?'disabled':''}
-                    onclick="${isDone?'':`doTask('${t.id}','${t.link}','${t.type}')`}">
-                    ${isDone ? '✅ Done' : 'Start'}
+                    id="taskBtn${t.id}"
+                    ${btnDisabled?'disabled':''}
+                    onclick="doTask('${t.id}','${t.link.replace(/'/g,"\\'")}','${t.type}')">
+                    ${isDone ? '✅ Done' : (timerRunning ? `⏳ Wait ${taskTimers[t.id]}s` : 'Start')}
                 </button>
             </div>
         `;
@@ -927,13 +1000,15 @@ function filterTasks(cat) {
 }
 
 async function doTask(taskId, link, type) {
-    // Open link properly
+    // Open link based on type
     try {
         if (type === 'telegram_chat' || type === 'telegram_bot') {
             tg.openTelegramLink(link);
         } else if (link.startsWith('https://t.me/')) {
             tg.openTelegramLink(link);
         } else if (link.startsWith('https://x.com/') || link.startsWith('https://twitter.com/')) {
+            tg.openLink(link);
+        } else if (link.startsWith('https://youtube.com/') || link.startsWith('https://youtu.be/')) {
             tg.openLink(link);
         } else {
             tg.openLink(link);
@@ -942,28 +1017,52 @@ async function doTask(taskId, link, type) {
         window.open(link, '_blank');
     }
     
-    // Wait then verify
-    setTimeout(async () => {
-        await db.ref('task_completions/'+telegramUser.id+'/'+taskId).set({
-            completed_at: new Date().toISOString()
+    // Start timer
+    const task = allTasks.find(t => t.id === taskId);
+    const timerSeconds = task?.timer_seconds || 30;
+    
+    taskTimers[taskId] = timerSeconds;
+    const btn = document.getElementById('taskBtn'+taskId);
+    btn.disabled = true;
+    btn.classList.add('done');
+    
+    const countdown = setInterval(() => {
+        taskTimers[taskId]--;
+        if (taskTimers[taskId] <= 0) {
+            clearInterval(countdown);
+            delete taskTimers[taskId];
+            verifyTaskCompletion(taskId);
+            btn.innerHTML = '✅ Done';
+        } else {
+            btn.innerHTML = `⏳ Wait ${taskTimers[taskId]}s`;
+        }
+    }, 1000);
+}
+
+async function verifyTaskCompletion(taskId) {
+    showLoading('Verifying task...');
+    
+    await db.ref('task_completions/'+telegramUser.id+'/'+taskId).set({
+        completed_at: new Date().toISOString()
+    });
+    
+    const task = allTasks.find(t => t.id === taskId);
+    if (task) {
+        await db.ref('users/'+telegramUser.id).update({
+            total_balance: (currentUser.total_balance||0) + (task.reward||0)
         });
         
-        const task = allTasks.find(t => t.id === taskId);
-        if (task) {
-            await db.ref('users/'+telegramUser.id).update({
-                total_balance: (currentUser.total_balance||0) + (task.reward||0)
-            });
-            
-            await db.ref('transactions/'+telegramUser.id).push({
-                type: 'task',
-                amount: task.reward,
-                task_id: taskId,
-                timestamp: new Date().toISOString()
-            });
-            
-            showPopup('success', '✅', 'Task Done!', `+${task.reward} GRM earned!`);
-        }
-    }, 3000);
+        await db.ref('transactions/'+telegramUser.id).push({
+            type: 'task',
+            amount: task.reward,
+            task_id: taskId,
+            timestamp: new Date().toISOString()
+        });
+    }
+    
+    hideLoading();
+    showPopup('success', '✅', 'Task Done!', `+${task.reward} GRM earned!`);
+    renderTasks();
 }
 
 // ==================== SEND TOKENS ====================
@@ -973,14 +1072,15 @@ async function sendTokens() {
     
     if (!to || !amt) return showPopup('error', '❌', 'Error', 'Fill all fields');
     if (to === telegramUser.id) return showPopup('error', '❌', 'Error', 'Cannot send to yourself');
-    if (amt < (settings.min_send||1)) return showPopup('error', '❌', 'Error', 'Min: '+(settings.min_send||1)+' GRM');
+    if (amt < (settings.min_send||1)) return showPopup('error', '❌', 'Min', 'Minimum: '+(settings.min_send||1)+' GRM');
     if (amt > (currentUser.total_balance||0)) return showPopup('error', '❌', 'Error', 'Insufficient balance');
     
     const recipSnap = await db.ref('users/'+to).once('value');
     if (!recipSnap.val()) return showPopup('error', '❌', 'Error', 'Recipient not found');
     
     showConfirm('Send Tokens', `Send ${amt} GRM to ${to}?`, async () => {
-        showLoading();
+        showLoading('Sending...');
+        
         await db.ref('users/'+telegramUser.id).update({
             total_balance: (currentUser.total_balance||0) - amt
         });
@@ -1002,7 +1102,7 @@ async function sendTokens() {
     });
 }
 
-// ==================== LOAD TRANSACTIONS ====================
+// ==================== TRANSACTIONS ====================
 async function loadTransactions() {
     const snap = await db.ref('transactions/'+telegramUser.id).limitToLast(20).once('value');
     const txs = snap.val();
@@ -1034,20 +1134,18 @@ async function loadPaymentMethods() {
     
     let html = '';
     
-    // Deposit methods
     if (data.deposit?.methods) {
         data.deposit.methods.filter(m=>m.is_active).forEach(m => {
             html += `
                 <div class="payment-card">
                     ${m.logo?`<img src="${m.logo}" alt="${m.name}">`:'💳'}
-                    <div style="flex:1;"><strong>${m.name} Deposit</strong><br><small>${m.address||''}</small></div>
-                    <button class="btn btn-outline btn-sm" onclick="copyText('${m.address||''}')">Copy</button>
+                    <div style="flex:1;"><strong>${m.name} Deposit</strong><br><small style="word-break:break-all;">${m.address||''}</small></div>
+                    <button class="btn btn-outline btn-sm" onclick="copyText('${(m.address||'').replace(/'/g,"\\'")}')">Copy</button>
                 </div>
             `;
         });
     }
     
-    // Withdraw methods
     if (data.withdraw?.methods) {
         data.withdraw.methods.filter(m=>m.is_active).forEach(m => {
             html += `
@@ -1067,10 +1165,11 @@ function switchTab(page) {
     document.querySelectorAll('.app-page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
     
-    const pageEl = document.getElementById('page'+page.charAt(0).toUpperCase()+page.slice(1));
+    const pageId = 'page' + page.charAt(0).toUpperCase() + page.slice(1);
+    const pageEl = document.getElementById(pageId);
     if (pageEl) pageEl.classList.add('active');
     
-    const navTab = document.querySelector(`.nav-tab[data-page="page${page.charAt(0).toUpperCase()+page.slice(1)}"]`);
+    const navTab = document.querySelector(`.nav-tab[data-page="${pageId}"]`);
     if (navTab) navTab.classList.add('active');
     
     if (page === 'tasks') renderTasks();
@@ -1105,17 +1204,14 @@ function showConfirm(title, msg, callback) {
 
 function closeModal(id) { document.getElementById(id).classList.remove('show'); }
 
-function showLoading() {
+function showLoading(msg = 'Processing...') {
     document.getElementById('loadingScreen').style.display = 'flex';
-    document.getElementById('loadingScreen').querySelector('p').textContent = 'Processing...';
+    document.getElementById('loadingScreen').querySelector('p').textContent = msg;
 }
 function hideLoading() { document.getElementById('loadingScreen').style.display = 'none'; }
 
 function showError(msg) {
-    document.getElementById('loadingScreen').innerHTML = `
-        <div style="font-size:60px;">⚠️</div>
-        <p style="font-weight:600;">${msg}</p>
-    `;
+    document.getElementById('loadingScreen').innerHTML = `<div style="font-size:60px;">⚠️</div><p style="font-weight:600;">${msg}</p>`;
 }
 
 function showBlockedScreen() {
@@ -1129,7 +1225,7 @@ function showMaintenanceScreen() {
 }
 
 function copyText(text) {
-    navigator.clipboard.writeText(text).then(() => showPopup('success','✅','Copied!','Address copied'));
+    navigator.clipboard.writeText(text).then(() => showPopup('success','✅','Copied!','Copied to clipboard'));
 }
 
 function copyMyId() {
@@ -1149,6 +1245,14 @@ function copyRefLink() {
 function showPrivacy() { showPopup('info','🔒','Privacy Policy','We protect your data. Only Telegram ID is stored.'); }
 function openSupport() { tg.openTelegramLink('https://t.me/GRMCrypto_TG_support'); }
 function closeApp() { tg.close(); }
+
+// Close modals on outside click
+document.querySelectorAll('.modal-overlay').forEach(modal => {
+    modal.addEventListener('click', function(e) {
+        if (e.target === this) this.classList.remove('show');
+    });
+});
 </script>
+
 </body>
 </html>
